@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.5)
+
+project(potato-ddsl)
+include_directories(SYSTEM "/usr/include/ddsl" "/usr/include/ddsl/libsvm" "/usr/include/caffe")
+add_definitions(-DCPU_ONLY)
+
+find_package(Caffe REQUIRED)
+add_executable(${PROJECT_NAME} "main.cpp" "program.cpp" "program.h" "cxxopts.hpp" "potatoutils.h" "dataloader.h" "loadeddata.h" "dataset.h")
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_OPT_ARCH_NATIVE_SUPPORTED)
+if (COMPILER_OPT_ARCH_NATIVE_SUPPORTED)
+    set(CMAKE_CXX_FLAGS "-march=native -Wall -Wpedantic -Werror")
+endif()
+set(DDSL_LIBS af_ddsl png_ddsl svm_ddsl)
+set(EXTERNAL_LIBS png)
+find_library(LOG4CXX_LIBRARIES log4cxx)
+target_link_libraries(${PROJECT_NAME} ${DDSL_LIBS} ${EXTERNAL_LIBS} ${LOG4CXX_LIBRARIES} ${Caffe_LIBRARIES})
