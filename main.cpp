@@ -7,19 +7,20 @@
 #include <log4cxx/helpers/properties.h>
 #include <boost/filesystem.hpp>
 
+#include "potatoutils.h"
 #include "cxxopts.hpp"
 #include "program.h"
 
-//namespace po = boost::program_options;
-
-inline bool endsWith(const std::string &value, const std::string &suffix)
-{
-    if (suffix.size() > value.size()) return false;
-    return std::equal(suffix.rbegin(), suffix.rend(), value.rbegin());
-}
-
 int main(int argc, char *argv[])
 {
+    std::cout << "                __          __               .___  .___     .__   "        << std::endl
+              << " ______   _____/  |______ _/  |_  ____     __| _/__| _/_____|  |  "        << std::endl
+              << " \\____ \\ /  _ \\   __\\__  \\    __\\/  _ \\   / __ |/ __ |/  ___/  |  " << std::endl
+              << " |  |_> >  <_> )  |  / __ \\|  | (  <_> ) / /_/ / /_/ |\\___ \\|  |__"     << std::endl
+              << " |   __/ \\____/|__| (____  /__|  \\____/  \\____ \\____ /____  >____/"    << std::endl
+              << " |__|                    \\/                   \\/    \\/    \\/      "    << std::endl
+              << std::endl;
+
     cxxopts::Options options(argv[0]);
     options.positional_help("<dataset root>");
     bool error = false;
@@ -38,8 +39,6 @@ int main(int argc, char *argv[])
             ("dataroot", "Location of dataset", cxxopts::value<std::vector<std::string>>(args));
     options.parse_positional("dataroot");
     options.parse(argc, argv);
-    std::hash<std::string>();
-    srand(static_cast<uint>(time(nullptr)));
 
     if (modelDir.empty())
     {
@@ -56,12 +55,13 @@ int main(int argc, char *argv[])
         std::cout << options.help() << std::endl;
         return error;
     }
+    dataRoot = args.front();
 
     if (seed.empty())
     {
         seed = "dinges";
     }
-    srand(static_cast<uint>(std::hash<std::string>{}(seed)));
+    rng.seed(std::hash<std::string>{}(seed));
 
     std::stringstream ss;
     std::string loggingLevel = "INFO";
@@ -98,8 +98,6 @@ int main(int argc, char *argv[])
     {
         ss << "stdout";
     }
-    //dataRoot = options["dataroot"].as<std::vector<std::string>>();
-    dataRoot = args.front();
 
     log4cxx::MDC::put("pid", std::to_string(getpid()));
     log4cxx::helpers::Properties properties;
@@ -107,10 +105,11 @@ int main(int argc, char *argv[])
     properties.put("log4j.appender.stdout", "org.apache.log4j.ConsoleAppender");
     properties.put("log4j.appender.stdout.layout", "org.apache.log4j.PatternLayout");;
     //properties.put("log4j.appender.stdout.layout.ConversionPattern", "%clr(%d{yyyy-MM-dd HH:mm:ss,SSS}){faint} %clr(%5p) %clr( ){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n");
-    properties.put("log4j.appender.stdout.layout.ConversionPattern", "\u001b[0;2m%d{yyyy-MM-dd HH:mm:ss.SSS}\u001b[m %5p  %X{pid} \u001b[0;2m---\u001b[m \u001b[0;2m[%14t]\u001b[m \u001b[0;36m%-16.16logger{39}\u001b[m \u001b[0;2m:\u001b[m %m%n");
+    properties.put("log4j.appender.stdout.layout.ConversionPattern", "\u001b[0;2m%d{yyyy-MM-dd HH:mm:ss.SSS}\u001b[m %5p  %X{pid} \u001b[0;2m---\u001b[m \u001b[0;2m[%14t]\u001b[m \u001b[0;36m%-12.12logger{39}\u001b[m \u001b[0;2m:\u001b[m %m%n");
     //properties.put("log4j.appender.stdout.layout.ConversionPattern", "\u001b[0;2m%d{yyyy-MM-dd HH:mm:ss.SSS}\u001b[m %5p  %X{pid} \u001b[0;2m---\u001b[m \u001b[0;2m[%14t]\u001b[m \u001b[0;36m%-32.32F:%L{39}\u001b[m \u001b[0;2m:\u001b[m %m%n");
     log4cxx::PropertyConfigurator::configure(properties);
     log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("Main");
+    LOG4CXX_INFO(logger, "Starting Potato DDSL");
 
     namespace fs = boost::filesystem;
     if (dataRoot.at(0) != '/')
@@ -147,7 +146,6 @@ int main(int argc, char *argv[])
             {
                 solverName = iter->path().filename().string();
                 LOG4CXX_INFO(logger, "Found model " << iter->path().string());
-
             }
         }
     }

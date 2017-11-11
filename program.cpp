@@ -4,6 +4,7 @@
 #include <vector>
 #include <chrono>
 #include <ddsl.hpp>
+#include <log4cxx/helpers/exception.h>
 
 #include "potatoutils.h"
 #include "dataloader.h"
@@ -16,32 +17,24 @@ int Program::run()
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
     using std::chrono::milliseconds;
-    DSFunc::startLogging(datasetRoot, datasetRoot);
+    google::InitGoogleLogging("potato-ddsl");
+    google::SetStderrLogging(google::GLOG_WARNING);
     try
     {
-        //std::shared_ptr<DataLoader<DSLib::Matrix<ImagePNG<float>>>> loader = DataLoader<DSLib::Matrix<ImagePNG<float>>>::newSharedInstance();
-        //std::shared_ptr<LoadedData<DSLib::Matrix<ImagePNG<float>>>> data = loader->withDataRoot(datasetRoot)->load();
-
-        LOG4CXX_INFO(logger, "Started loading images in directory \"" << datasetRoot << '"');
-        auto start = high_resolution_clock::now();
         std::shared_ptr<DataLoader> loader = DataLoader::newSharedInstance();
         std::shared_ptr<LoadedData> data = loader->withDataRoot(datasetRoot)->load();
-        //DSLib::Matrix<DSImage::ImagePNG<float>> loadedImages = data->getImages();
-        //DSLib::Matrix<float> classTable = data->getClassTable();
-        LOG4CXX_INFO(logger, "Loaded all images in " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count() << "ms");
         DataSet<std::vector<DSImage::ImagePNG<float>>, std::vector<float>, std::vector<DSImage::ImagePNG<float>>, std::vector<float>> dataSet = data->splitSets();
-        LOG4CXX_DEBUG(logger, "Split data in training and validation set");
-        //trans
-        DSLib::Table<> modelData = ((DSTypes::ctFeature | DSLib::Matrix<ImagePNG<float>>(static_cast<unsigned int>(dataSet.first.size()), 1u, dataSet.first)) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, dataSet.second)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, 0.f))) ^
-                  ((DSTypes::ctFeature | DSLib::Matrix<ImagePNG<float>>(static_cast<unsigned int>(dataSet.third.size()), 1u, dataSet.third)) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, dataSet.fourth)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, 1.f)));
+        DSLib::Table<> modelData = (DSTypes::dtString | "data" | "label" | "split") ^
+                (((DSTypes::ctFeature | DSLib::Matrix<DSImage::ImagePNG<float>>(static_cast<unsigned int>(dataSet.first.size()), 1u, dataSet.first)) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, dataSet.second)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, 0.f))) ^
+                  ((DSTypes::ctFeature | DSLib::Matrix<DSImage::ImagePNG<float>>(static_cast<unsigned int>(dataSet.third.size()), 1u, dataSet.third)) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, dataSet.fourth)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, 1.f))));
 
-        LOG4CXX_DEBUG(logger, modelData.printLess());
+        //LOG4CXX_DEBUG(logger, "Shape of data to load in model:\n" << modelData.printLess());
 
-        start = high_resolution_clock::now();
+        auto start = high_resolution_clock::now();
         DSModel::Caffe<float> pipeline = +DSModel::Caffe<float>(data->getClassTable(), modelName, solverName) | -DSModel::Confusion<float>();
         LOG4CXX_INFO(logger, "Loaded model in " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count() << "ms");
         start = high_resolution_clock::now();
-        DSLib::Table<> trainScore = modelData(modelData[DSTypes::ctSplit] == 0u) > pipeline;
+        DSLib::Table<> trainScore = pipeline.train(std::move(modelData(modelData[DSTypes::ctSplit] == 0.f)));
         LOG4CXX_INFO(logger, "Trained model in " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count() << "ms");
         //trainScore.pr;
 
@@ -67,6 +60,6 @@ int Program::run()
     {
         LOG4CXX_ERROR(logger, "Failed to load the dataset: " << ex.what())
     }
-    HANDLE_DDSL_ERROR
+    //HANDLE_DDSL_ERROR
     return 0;
 }

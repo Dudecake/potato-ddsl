@@ -3,8 +3,10 @@
 
 #include <iostream>
 #include <string>
+#include <random>
 #include <log4cxx/logger.h>
-#include <ddsl.hpp>
+
+static std::mt19937_64 rng;
 
 #define HANDLE_DDSL_ERROR catch (const double &e) {\
 LOG4CXX_ERROR(logger, "double" << e);\
@@ -21,7 +23,7 @@ LOG4CXX_ERROR(logger, e.what());\
 inline bool endsWith(std::string &value, std::string &suffix)
 {
     if (suffix.size() > value.size()) return false;
-    return std::equal(suffix.rbegin(), suffix.rend(), value.begin());
+    return std::equal(suffix.rbegin(), suffix.rend(), value.rbegin());
 }
 
 inline bool endsWith(const std::string &value, const std::string &suffix)
