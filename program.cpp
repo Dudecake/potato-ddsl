@@ -18,20 +18,26 @@ int Program::run()
     using std::chrono::duration_cast;
     using std::chrono::milliseconds;
     google::InitGoogleLogging("potato-ddsl");
-    google::SetStderrLogging(google::GLOG_WARNING);
+    google::LogToStderr();
+    //google::SetStderrLogging(google::GLOG_WARNING);
     try
     {
         std::shared_ptr<DataLoader> loader = DataLoader::newSharedInstance();
         std::shared_ptr<LoadedData> data = loader->withDataRoot(datasetRoot)->load();
-        DataSet<std::vector<DSImage::ImagePNG<float>>, std::vector<float>, std::vector<DSImage::ImagePNG<float>>, std::vector<float>> dataSet = data->splitSets();
-        DSLib::Table<> modelData = (DSTypes::dtString | "data" | "label" | "split") ^
-                (((DSTypes::ctFeature | DSLib::Matrix<DSImage::ImagePNG<float>>(static_cast<unsigned int>(dataSet.first.size()), 1u, dataSet.first)) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, dataSet.second)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, 0.f))) ^
-                  ((DSTypes::ctFeature | DSLib::Matrix<DSImage::ImagePNG<float>>(static_cast<unsigned int>(dataSet.third.size()), 1u, dataSet.third)) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, dataSet.fourth)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, 1.f))));
+//        DataSet<std::vector<DSImage::ImagePNG<float>>, std::vector<float>, std::vector<DSImage::ImagePNG<float>>, std::vector<float>> dataSet = data->splitSets();
+//        DSLib::Table<> modelData = //(DSTypes::dtString | "data" | "label" | "split") ^
+//                (((DSTypes::ctFeature | DSLib::Matrix<DSImage::ImagePNG<float>>(static_cast<unsigned int>(dataSet.first.size()), 1u, dataSet.first)) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, dataSet.second)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, 0.f))) ^
+//                  ((DSTypes::ctFeature | DSLib::Matrix<DSImage::ImagePNG<float>>(static_cast<unsigned int>(dataSet.third.size()), 1u, dataSet.third)) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, dataSet.fourth)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, 1.f))));
+
+        DataSet<std::vector<DSLib::Matrix<float>>, std::vector<float>, std::vector<DSLib::Matrix<float>>, std::vector<float>> dataSet = data->splitSetsAsMatrix();
+        DSLib::Table<> modelData = //(DSTypes::dtString | "data" | "label" | "split") ^
+                (((DSTypes::ctFeature | DSLib::Matrix<DSLib::Matrix<float>>(static_cast<unsigned int>(dataSet.first.size()), 1u, dataSet.first)) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, dataSet.second)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, 0.f))) ^
+                  ((DSTypes::ctFeature | DSLib::Matrix<DSLib::Matrix<float>>(static_cast<unsigned int>(dataSet.third.size()), 1u, dataSet.third)) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, dataSet.fourth)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, 1.f))));
 
         //LOG4CXX_DEBUG(logger, "Shape of data to load in model:\n" << modelData.printLess());
 
         auto start = high_resolution_clock::now();
-        DSModel::Caffe<float> pipeline = +DSModel::Caffe<float>(data->getClassTable(), modelName, solverName) | -DSModel::Confusion<float>();
+        DSModel::Caffe<float> pipeline = +DSModel::Caffe<float>(data->getClassTable(), modelName, solverName) | -DSModel::Confusion<float>(data->getClassTable());
         LOG4CXX_INFO(logger, "Loaded model in " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count() << "ms");
         start = high_resolution_clock::now();
         DSLib::Table<> trainScore = pipeline.train(std::move(modelData(modelData[DSTypes::ctSplit] == 0.f)));

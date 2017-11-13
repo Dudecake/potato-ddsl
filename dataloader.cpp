@@ -45,7 +45,6 @@ std::shared_ptr<LoadedData> DataLoader::load()
 std::vector<ImagePNG<float> > DataLoader::loadImages(boost::filesystem::path path)
 {
     std::vector<ImagePNG<float>> res;
-    DSImage::ImagePNG<float> image;
 
     namespace fs = boost::filesystem;
     fs::directory_iterator end_iter;

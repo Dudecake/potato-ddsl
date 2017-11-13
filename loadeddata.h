@@ -57,6 +57,8 @@ class LoadedData
          */
         DataSet<std::vector<DSImage::ImagePNG<float>>, std::vector<float>, std::vector<DSImage::ImagePNG<float>>, std::vector<float>> splitSets();
 
+        DataSet<std::vector<DSLib::Matrix<float>>, std::vector<float>, std::vector<DSLib::Matrix<float>>, std::vector<float>> splitSetsAsMatrix();
+
         std::vector<DSImage::ImagePNG<float>> getClassImages(uint index)
         {
             std::vector<DSImage::ImagePNG<float>> res;
