@@ -14,30 +14,28 @@ class DataLoader
     public:
         inline static std::shared_ptr<DataLoader> newSharedInstance()
         {
-            return std::shared_ptr<DataLoader>(new DataLoader);
+            std::shared_ptr<DataLoader> res = std::shared_ptr<DataLoader>(new DataLoader);
+            res->weakSelf = res;
+            return res;
         }
 
-        inline static DataLoader *newInstance()
-        {
-            return new DataLoader;
-        }
-
-        inline DataLoader *withClasses(int number)
+        inline std::shared_ptr<DataLoader> withClasses(int number)
         {
             this->classes = number;
-            return this;
+            return weakSelf.lock();
         }
 
-        inline DataLoader *withDataRoot(std::string dataRoot)
+        inline std::shared_ptr<DataLoader> withDataRoot(std::string dataRoot)
         {
             this->datasetRoot = dataRoot;
-            return this;
+            return weakSelf.lock();
         }
 
         std::shared_ptr<LoadedData> load();
 
     private:
         static log4cxx::LoggerPtr logger;
+        std::weak_ptr<DataLoader> weakSelf;
         long classes;
         std::string datasetRoot;
         DataLoader() : classes(0), datasetRoot("") {  }

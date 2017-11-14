@@ -6,7 +6,7 @@
 
 log4cxx::LoggerPtr LoadedData::logger = log4cxx::Logger::getLogger("LoadedData");
 
-DataSet<std::vector<DSImage::ImagePNG<float> >, std::vector<float>, std::vector<DSImage::ImagePNG<float> >, std::vector<float> > LoadedData::splitSets()
+DataSet<std::vector<DSImage::ImagePNG<float> >, std::vector<float>, std::vector<DSImage::ImagePNG<float> >, std::vector<float>> LoadedData::splitSets()
 {
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
@@ -61,25 +61,47 @@ DataSet<std::vector<DSImage::ImagePNG<float> >, std::vector<float>, std::vector<
     return DataSet<std::vector<DSImage::ImagePNG<float>>, std::vector<float>, std::vector<DSImage::ImagePNG<float>>, std::vector<float>>(training, trainingClasses, validation, validationClasses);
 }
 
-DataSet<std::vector<DSLib::Matrix<float>>, std::vector<float>, std::vector<DSLib::Matrix<float>>, std::vector<float>> LoadedData::splitSetsAsMatrix()
+DataSet<DSLib::Matrix<DSLib::Matrix<float> >, std::vector<float>, DSLib::Matrix<DSLib::Matrix<float> >, std::vector<float> > LoadedData::splitSetsAsMatrixII()
 {
     DataSet<std::vector<DSImage::ImagePNG<float>>, std::vector<float>, std::vector<DSImage::ImagePNG<float>>, std::vector<float>> splitSet = splitSets();
-    std::vector<DSLib::Matrix<float>> trainImages{ DSLib::Matrix<float>() }, valImages{ DSLib::Matrix<float>() };
-    // TODO: turn trainimages in a DSLib::Matrix<DSLib::Matrix<float>>
+    DSLib::Matrix<DSLib::Matrix<float>> trainImages, valImages;
+    DSLib::Matrix<DSLib::Matrix<float>> currentMat;
 
-    //DSLib::Table<> table = (DSTypes::ctFeature | splitSet.first.front().getChannel(0)) ^ (DSTypes::ctFeature | splitSet.first.front().getChannel(1)) ^ (DSTypes::ctFeature | splitSet.first.front().getChannel(2));
+    ((trainImages ^ splitSet.first.front().getChannel(0).mat()) | splitSet.first.front().getChannel(1).mat())  | splitSet.first.front().getChannel(2).mat();
+    ((valImages ^ splitSet.third.front().getChannel(0).mat()) | splitSet.third.front().getChannel(1).mat()) | splitSet.third.front().getChannel(2).mat();
+    for (auto imageIt = splitSet.first.begin() + 1; imageIt != splitSet.first.end(); imageIt++)
+    {
+        ((currentMat | (*imageIt).getChannel(0).mat()) | (*imageIt).getChannel(1).mat())  | (*imageIt).getChannel(2).mat();
+        trainImages ^ std::move(currentMat);
+        currentMat.clear();
+    }
+    for (auto imageIt = splitSet.third.begin() + 1; imageIt != splitSet.third.end(); imageIt++)
+    {
+        ((currentMat | (*imageIt).getChannel(0).mat()) | (*imageIt).getChannel(1).mat())  | (*imageIt).getChannel(2).mat();
+        valImages ^ std::move(currentMat);
+        currentMat.clear();
+    }
+    LOG4CXX_DEBUG(logger, "Shape of matrix:\n" << trainImages.printLess() << trainImages.val(0u, 0u).printLess());
+    return DataSet<DSLib::Matrix<DSLib::Matrix<float>>, std::vector<float>, DSLib::Matrix<DSLib::Matrix<float>>, std::vector<float>>(trainImages, splitSet.second, valImages, splitSet.fourth);
+}
+
+DataSet<std::vector<DSLib::Matrix<DSLib::Matrix<float>>>, std::vector<float>, std::vector<DSLib::Matrix<DSLib::Matrix<float>>>, std::vector<float>> LoadedData::splitSetsAsMatrix()
+{
+    DataSet<std::vector<DSImage::ImagePNG<float>>, std::vector<float>, std::vector<DSImage::ImagePNG<float>>, std::vector<float>> splitSet = splitSets();
+    //std::vector<DSLib::Matrix<float>> trainImages{ DSLib::Matrix<float>() }, valImages{ DSLib::Matrix<float>() };
+    std::vector<DSLib::Matrix<DSLib::Matrix<float>>> trainImages{ DSLib::Matrix<DSLib::Matrix<float>>() }, valImages{ DSLib::Matrix<DSLib::Matrix<float>>() };
 
     for (auto imageIt = splitSet.first.begin(); imageIt != splitSet.first.end(); imageIt++)
     {
-        trainImages.back() | ((*imageIt).getChannel(0).mat() | (*imageIt).getChannel(1).mat() | (*imageIt).getChannel(2).mat());
-        trainImages.push_back(DSLib::Matrix<float>());
+        trainImages.back() | (*imageIt).getChannel(0).mat() | (*imageIt).getChannel(1).mat() | (*imageIt).getChannel(2).mat();
+        trainImages.push_back(DSLib::Matrix<DSLib::Matrix<float>>());
     }
     trainImages.pop_back();
     for (auto imageIt = splitSet.third.begin(); imageIt != splitSet.third.end(); imageIt++)
     {
-        valImages.back() | ((*imageIt).getChannel(0).mat() | (*imageIt).getChannel(1).mat() | (*imageIt).getChannel(2).mat());
-        valImages.push_back(DSLib::Matrix<float>());
+        valImages.back() | (*imageIt).getChannel(0).mat() | (*imageIt).getChannel(1).mat() | (*imageIt).getChannel(2).mat();
+        valImages.push_back(DSLib::Matrix<DSLib::Matrix<float>>());
     }
     valImages.pop_back();
-    return DataSet<std::vector<DSLib::Matrix<float>>, std::vector<float>, std::vector<DSLib::Matrix<float>>, std::vector<float>>(trainImages, splitSet.second, valImages, splitSet.fourth);
+    return DataSet<std::vector<DSLib::Matrix<DSLib::Matrix<float>>>, std::vector<float>, std::vector<DSLib::Matrix<DSLib::Matrix<float>>>, std::vector<float>>(trainImages, splitSet.second, valImages, splitSet.fourth);
 }
