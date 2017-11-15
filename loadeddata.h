@@ -2,10 +2,7 @@
 #define LOADEDDATA_H
 
 #include <vector>
-
 #include <hpp/DS_Types.hpp>
-#include <hpp/DS_Util.hpp>
-
 #include <log4cxx/logger.h>
 
 #include "dataset.h"
@@ -75,7 +72,7 @@ class LoadedData
         {
             data.insert(data.end(), images.begin(), images.end());
             //classTable | static_cast<float>(classOffsets.size());
-            classTable.cols.add(static_cast<float>(classOffsets.size()));
+            classTable.cols.add(static_cast<float>(classOffsets.size() - 1));
             classOffsets.push_back(static_cast<uint>(data.size() - 1));
         }
 

@@ -40,8 +40,19 @@ int Program::run()
         DSModel::Caffe<float> pipeline = +DSModel::Caffe<float>(data->getClassTable(), modelName, solverName) | -DSModel::Confusion<float>(data->getClassTable());
         LOG4CXX_INFO(logger, "Loaded model in " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count() << "ms");
         start = high_resolution_clock::now();
-        DSLib::Table<> trainScore = pipeline.train(std::move(modelData(modelData[DSTypes::ctSplit] == 0.f)));
+        DSLib::Table<> trainScore = pipeline.train(modelData(modelData[DSTypes::ctSplit] == 0.f));
         LOG4CXX_INFO(logger, "Trained model in " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count() << "ms");
+        std::stringstream ss;
+        trainScore.print(ss);
+        std::string confusionString = ss.str();
+        confusionString.pop_back();
+        LOG4CXX_INFO(logger, "Results of training:\n" << confusionString);
+        DSLib::Table<> valScore = pipeline.train(modelData(modelData[DSTypes::ctSplit] == 1.f));
+        ss.clear();
+        valScore.print(ss);
+        confusionString = ss.str();
+        confusionString.pop_back();
+        LOG4CXX_INFO(logger, "Results of evaluation:\n" << confusionString);
         //trainScore.pr;
 
         return 0;

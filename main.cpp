@@ -21,6 +21,8 @@ int main(int argc, char *argv[])
               << " |__|                    \\/                   \\/    \\/    \\/      "    << std::endl
               << std::endl;
 
+    std::string logEnv("GLOG_minloglevel"), logLevel("1");
+    setenv(&logEnv[0], &logLevel[0], 0);
     cxxopts::Options options(argv[0]);
     options.positional_help("<dataset root>");
     bool error = false;

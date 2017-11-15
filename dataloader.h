@@ -3,6 +3,7 @@
 
 #include <string>
 #include <memory>
+#include <hpp/DS_Types.hpp>
 #include <boost/filesystem.hpp>
 #include <log4cxx/logger.h>
 
