@@ -10,8 +10,9 @@
 class LoadedData
 {
     public:
-        LoadedData() : percentageSplit(25.0), classOffsets{ 0 } {  }
-        LoadedData(std::vector<DSImage::ImagePNG<float>> images, std::vector<uint> offsets, DSLib::Matrix<float> classTable) : percentageSplit(25.0), data(images), classOffsets(offsets), classTable(classTable) { }
+        LoadedData(double percentageSplit = 25) : percentageSplit(percentageSplit), classOffsets{ 0 } {  }
+        LoadedData(std::vector<DSImage::ImagePNG<float>> images, std::vector<uint> offsets, DSLib::Matrix<float> classTable, double percentageSplit = 25) :
+            percentageSplit(percentageSplit), data(images), classOffsets(offsets), classTable(classTable) { }
 
         DSLib::Matrix<float> getClassTable()
         {
@@ -52,11 +53,11 @@ class LoadedData
          * @brief splitSets splits the loaded data in a training and validation set
          * @return a pair containing the training and validation set respectively
          */
-        DataSet<std::vector<DSImage::ImagePNG<float>>, std::vector<float>, std::vector<DSImage::ImagePNG<float>>, std::vector<float>> splitSets();
+        DataSet<std::vector<DSImage::ImagePNG<float>>, std::vector<float>> splitSets();
 
-        DataSet<DSLib::Matrix<DSLib::Matrix<float>>, std::vector<float>, DSLib::Matrix<DSLib::Matrix<float>>, std::vector<float>> splitSetsAsMatrixII();
+        DataSet<DSLib::Matrix<DSLib::Matrix<float>>, std::vector<float>> splitSetsAsMatrixII();
 
-        DataSet<std::vector<DSLib::Matrix<DSLib::Matrix<float>>>, std::vector<float>, std::vector<DSLib::Matrix<DSLib::Matrix<float>>>, std::vector<float>> splitSetsAsMatrix();
+        DataSet<std::vector<DSLib::Matrix<DSLib::Matrix<float>>>, std::vector<float>> splitSetsAsMatrix();
 
         std::vector<DSImage::ImagePNG<float>> getClassImages(uint index)
         {

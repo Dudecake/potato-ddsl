@@ -32,6 +32,12 @@ class DataLoader
             return weakSelf.lock();
         }
 
+        inline std::shared_ptr<DataLoader> withDataSplit(double percentageSplit)
+        {
+            this->percentageSplit = percentageSplit;
+            return weakSelf.lock();
+        }
+
         std::shared_ptr<LoadedData> load();
 
     private:
@@ -39,7 +45,8 @@ class DataLoader
         std::weak_ptr<DataLoader> weakSelf;
         long classes;
         std::string datasetRoot;
-        DataLoader() : classes(0), datasetRoot("") {  }
+        double percentageSplit;
+        DataLoader() : classes(0), datasetRoot(""), percentageSplit(25) {  }
 
         static std::vector<ImagePNG<float>> loadImages(boost::filesystem::path path);
 };

@@ -19,7 +19,7 @@ std::shared_ptr<LoadedData> DataLoader::load()
         throw log4cxx::helpers::IOException(ss.str());
     }
     LOG4CXX_INFO(logger, "Started loading images in directory \"" << datasetRoot << '"');
-    std::shared_ptr<LoadedData> res = std::make_shared<LoadedData>();
+    std::shared_ptr<LoadedData> res = std::make_shared<LoadedData>(percentageSplit);
     auto startLoad = high_resolution_clock::now();
     fs::directory_iterator end_iter;
     size_t lastSize = 0;
@@ -38,7 +38,7 @@ std::shared_ptr<LoadedData> DataLoader::load()
     {
         LOG4CXX_ERROR(logger, "Could not find any classes in directory \"" << datasetRoot << '"');
     }
-    LOG4CXX_INFO(logger, "Loaded all images in " << duration_cast<milliseconds>(high_resolution_clock::now() - startLoad).count() << "ms");
+    LOG4CXX_INFO(logger, "Loaded all " << res->size() << " images in " << duration_cast<milliseconds>(high_resolution_clock::now() - startLoad).count() << "ms");
     return res;
 }
 

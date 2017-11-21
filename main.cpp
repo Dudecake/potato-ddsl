@@ -6,6 +6,7 @@
 #include <log4cxx/propertyconfigurator.h>
 #include <log4cxx/helpers/properties.h>
 #include <boost/filesystem.hpp>
+#include <common.hpp>
 
 #include "potatoutils.h"
 #include "cxxopts.hpp"
@@ -28,15 +29,18 @@ int main(int argc, char *argv[])
     bool error = false;
     bool needHelp = false;
     bool verbose = false;
-    std::string seed;
+    std::string seedString;
     std::string modelDir;
     std::string logfile;
     std::vector<std::string> args;
     std::string dataRoot;
+    double percentageSplit = 25;
     options.add_options()
             ("h, help", "Get help message", cxxopts::value<bool>(needHelp))
             ("m, model", "Specify model and solver directory", cxxopts::value<std::string>(modelDir))
             ("l, logfile", "Log to file", cxxopts::value<std::string>(logfile))
+            ("s, seed", "Seed to use for the random number generator", cxxopts::value<std::string>(seedString))
+            ("p, split", "Percentage split for the validation and training set", cxxopts::value<double>(percentageSplit))
             ("v, verbose", "Specify verbosity, up to -vvv", cxxopts::value<bool>(verbose))
             ("dataroot", "Location of dataset", cxxopts::value<std::vector<std::string>>(args));
     options.parse_positional("dataroot");
@@ -59,11 +63,14 @@ int main(int argc, char *argv[])
     }
     dataRoot = args.front();
 
-    if (seed.empty())
+    uint64_t seed = std::hash<std::string>{}("dinges");
+    if (!seedString.empty())
     {
-        seed = "dinges";
+        seed = std::hash<std::string>{}(seedString);
     }
-    rng.seed(std::hash<std::string>{}(seed));
+    rng.seed(seed);
+    caffe::Caffe::set_random_seed(static_cast<unsigned int>(seed));
+    srand(static_cast<unsigned int>(seed));
 
     std::stringstream ss;
     std::string loggingLevel = "INFO";
@@ -157,6 +164,6 @@ int main(int argc, char *argv[])
         return 3;
     }
 
-    Program p(dataRoot, modelName, solverName);
+    Program p(dataRoot, modelName, solverName, percentageSplit);
     return p.run();
 }
