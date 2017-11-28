@@ -29,7 +29,7 @@ std::shared_ptr<LoadedData> DataLoader::load()
         {
             auto start = high_resolution_clock::now();
             LOG4CXX_DEBUG(logger, "Found new class \"" << iter->path().filename().string() << '"');
-            res->addClass(loadImages(iter->path()));
+            res->addClassWithName(loadImages(iter->path()), iter->path().filename().string());
             LOG4CXX_DEBUG(logger, "Loaded " << (res->size() - lastSize) << " images in " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count() << "ms");
             lastSize = res->size();
         }

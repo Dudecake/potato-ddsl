@@ -24,7 +24,17 @@ class LoadedData
             return static_cast<uint>(classOffsets.size());
         }
 
-        std::vector<DSImage::ImagePNG<float>> &getRData()
+        bool hasClassNames()
+        {
+            return !classNames.empty();
+        }
+
+        std::vector<std::string> getClassNames()
+        {
+            return classNames;
+        }
+
+        std::vector<DSImage::ImagePNG<float>> &getMutableData()
         {
             return data;
         }
@@ -74,6 +84,15 @@ class LoadedData
             data.insert(data.end(), images.begin(), images.end());
             //classTable | static_cast<float>(classOffsets.size());
             classTable.cols.add(static_cast<float>(classOffsets.size() - 1));
+            classNames.push_back(std::to_string(classOffsets.size() - 1));
+            classOffsets.push_back(static_cast<uint>(data.size() - 1));
+        }
+
+        void addClassWithName(const std::vector<DSImage::ImagePNG<float>> images, std::string className)
+        {
+            data.insert(data.end(), images.begin(), images.end());
+            classTable.cols.add(static_cast<float>(classOffsets.size() - 1));
+            classNames.push_back(className);
             classOffsets.push_back(static_cast<uint>(data.size() - 1));
         }
 
@@ -83,6 +102,7 @@ class LoadedData
         std::vector<DSImage::ImagePNG<float>> data;
         std::vector<uint> classOffsets;
         DSLib::Matrix<float> classTable;
+        std::vector<std::string> classNames;
 
 };
 

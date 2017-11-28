@@ -5,7 +5,7 @@ include_directories(SYSTEM "/usr/include/ddsl" "/usr/include/ddsl/libsvm" "/usr/
 add_definitions(-DCPU_ONLY)
 
 find_package(Caffe REQUIRED)
-add_executable(${PROJECT_NAME} "main.cpp" "program.cpp" "program.h" "cxxopts.hpp" "potatoutils.h" "dataloader.h" "dataloader.cpp" "loadeddata.h" "loadeddata.cpp" "dataset.h")
+add_executable(${PROJECT_NAME} "main.cpp" "program.cpp" "program.h" "cxxopts.hpp" "evaluation.hpp" "confusion.hpp" "potatoutils.h" "dataloader.h" "dataloader.cpp" "loadeddata.h" "loadeddata.cpp" "dataset.h")
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 include(CheckCXXCompilerFlag)
