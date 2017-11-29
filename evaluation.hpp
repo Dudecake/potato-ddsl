@@ -132,8 +132,6 @@ public:
     }
 
     void print(ostream &ss){
-        ss<<"Accuracy Evaluation Results"<<endl;
-        ss << "=======================================" << endl;
         ss<<"\tAverage System Accuracy(%): "<< _avgAccuray*100<<endl;
         ss<<"\tSystem Error(%)           : "<< _errRate*100<<endl;
         ss<<"\tPrecision (Micro)(%)      : "<< _precisionMicro*100<<endl;
