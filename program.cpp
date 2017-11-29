@@ -42,8 +42,10 @@ int Program::run()
 
         LOG4CXX_TRACE(logger, "Shape of data to load in model:\n" << bufferString);
 
+        #ifdef CPU_ONLY
         caffe::Caffe::set_mode(caffe::Caffe::Brew::CPU);
         caffe::Caffe::set_multiprocess(true);
+        #endif
         auto start = high_resolution_clock::now();
         DSModel::Caffe<float> pipeline = +DSModel::Caffe<float>(data->getClassTable(), modelName, solverName);// | -DSModel::Confusion<float>(data->getClassTable());
         LOG4CXX_INFO(logger, "Loaded model in " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count() << "ms");
