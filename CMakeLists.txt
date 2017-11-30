@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(potato-ddsl)
-include_directories(SYSTEM "/usr/include/ddsl" "/usr/include/ddsl/libsvm" "/usr/include/caffe")
+include_directories(SYSTEM "/usr/local/include/ddsl" "/usr/local/include/ddsl/libsvm" "/usr/local/include/caffe")
+
+if(USE_NCCL)
+    add_definitions(-DUSE_NCCL=ON)
+endif()
 
 find_package(Caffe REQUIRED)
 add_executable(${PROJECT_NAME} "main.cpp" "program.cpp" "program.h" "cxxopts.hpp" "evaluation.hpp" "confusion.hpp" "potatoutils.h" "dataloader.h" "dataloader.cpp" "loadeddata.h" "loadeddata.cpp" "dataset.h")
