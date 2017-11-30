@@ -45,9 +45,12 @@ int Program::run()
         #ifdef CPU_ONLY
         caffe::Caffe::set_mode(caffe::Caffe::Brew::CPU);
         caffe::Caffe::set_multiprocess(true);
+        auto gpus = (DSTypes::dtInt32 | 0);
+        #else
+        auto gpus = (DSTypes::dtInt32 | 0 | 1);
         #endif
         auto start = high_resolution_clock::now();
-        DSModel::Caffe<float> pipeline = +DSModel::Caffe<float>(data->getClassTable(), modelName, solverName);// | -DSModel::Confusion<float>(data->getClassTable());
+        DSModel::Caffe<float> pipeline = +DSModel::Caffe<float>(data->getClassTable(), modelName, solverName, gpus);// | -DSModel::Confusion<float>(data->getClassTable());
         LOG4CXX_INFO(logger, "Loaded model in " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count() << "ms");
         start = high_resolution_clock::now();
         DSLib::Table<> trainScore = pipeline.train(modelData(modelData[DSTypes::ctSplit] == 0.f));
