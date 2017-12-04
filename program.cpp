@@ -47,7 +47,8 @@ int Program::run()
         caffe::Caffe::set_multiprocess(true);
         auto gpus = (DSTypes::dtInt32 | 0);
         #else
-        auto gpus = (DSTypes::dtInt32 | 0 | 1);
+        auto gpus = (DSTypes::dtInt32 | 0 || 1);
+        setCaffeGPUs(gpus);
         #endif
         auto start = high_resolution_clock::now();
         DSModel::Caffe<float> pipeline = +DSModel::Caffe<float>(data->getClassTable(), modelName, solverName, gpus);// | -DSModel::Confusion<float>(data->getClassTable());
