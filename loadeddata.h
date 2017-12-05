@@ -3,15 +3,15 @@
 
 #include <vector>
 #include <hpp/DS_Types.hpp>
-#include <log4cxx/logger.h>
 
+#include "potatologger.h"
 #include "dataset.h"
 
 class LoadedData
 {
     public:
         LoadedData(double percentageSplit = 25) : percentageSplit(percentageSplit), classOffsets{ 0 } {  }
-        LoadedData(std::vector<DSImage::ImagePNG<float>> images, std::vector<uint> offsets, DSLib::Matrix<float> classTable, double percentageSplit = 25) :
+        LoadedData(std::vector<DSImage::ImagePNG<float>> images, std::vector<unsigned int> offsets, DSLib::Matrix<float> classTable, double percentageSplit = 25) :
             percentageSplit(percentageSplit), data(images), classOffsets(offsets), classTable(classTable) { }
 
         DSLib::Matrix<float> getClassTable()
@@ -19,9 +19,9 @@ class LoadedData
             return classTable;
         }
 
-        uint getClasses()
+        unsigned int getClasses()
         {
-            return static_cast<uint>(classOffsets.size());
+            return static_cast<unsigned int>(classOffsets.size());
         }
 
         bool hasClassNames()
@@ -69,7 +69,7 @@ class LoadedData
 
         DataSet<std::vector<DSLib::Matrix<DSLib::Matrix<float>>>, std::vector<float>> splitSetsAsMatrix();
 
-        std::vector<DSImage::ImagePNG<float>> getClassImages(uint index)
+        std::vector<DSImage::ImagePNG<float>> getClassImages(unsigned int index)
         {
             std::vector<DSImage::ImagePNG<float>> res;
             if (index < classOffsets.size() - 1)
@@ -85,7 +85,7 @@ class LoadedData
             //classTable | static_cast<float>(classOffsets.size());
             classTable.cols.add(static_cast<float>(classOffsets.size() - 1));
             classNames.push_back(std::to_string(classOffsets.size() - 1));
-            classOffsets.push_back(static_cast<uint>(data.size() - 1));
+            classOffsets.push_back(static_cast<unsigned int>(data.size() - 1));
         }
 
         void addClassWithName(const std::vector<DSImage::ImagePNG<float>> images, std::string className)
@@ -93,14 +93,14 @@ class LoadedData
             data.insert(data.end(), images.begin(), images.end());
             classTable.cols.add(static_cast<float>(classOffsets.size() - 1));
             classNames.push_back(className);
-            classOffsets.push_back(static_cast<uint>(data.size() - 1));
+            classOffsets.push_back(static_cast<unsigned int>(data.size() - 1));
         }
 
     private:
-        static log4cxx::LoggerPtr logger;
+        static Logger logger;
         double percentageSplit;
         std::vector<DSImage::ImagePNG<float>> data;
-        std::vector<uint> classOffsets;
+        std::vector<unsigned int> classOffsets;
         DSLib::Matrix<float> classTable;
         std::vector<std::string> classNames;
 

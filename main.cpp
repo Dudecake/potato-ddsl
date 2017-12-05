@@ -1,4 +1,3 @@
-#include <unistd.h>
 #include <iostream>
 #include <log4cxx/logger.h>
 #include <log4cxx/basicconfigurator.h>
@@ -6,9 +5,10 @@
 #include <log4cxx/propertyconfigurator.h>
 #include <log4cxx/helpers/properties.h>
 #include <boost/filesystem.hpp>
-#include <common.hpp>
+#include <caffe/common.hpp>
 
 #include "potatoutils.h"
+#include "potatologger.h"
 #include "cxxopts.hpp"
 #include "program.h"
 
@@ -22,8 +22,6 @@ int main(int argc, char *argv[])
               << " |__|                    \\/                   \\/    \\/    \\/      "    << std::endl
               << std::endl;
 
-    std::string logEnv("GLOG_minloglevel"), logLevel("1");
-    setenv(&logEnv[0], &logLevel[0], 0);
     cxxopts::Options options(argv[0]);
     options.positional_help("<dataset root>");
     bool error = false;
@@ -34,6 +32,7 @@ int main(int argc, char *argv[])
     std::string logfile;
     std::vector<std::string> args;
     std::string dataRoot;
+    std::string exportPath;
     double percentageSplit = 25;
     options.add_options()
             ("h, help", "Get help message", cxxopts::value<bool>(needHelp))
@@ -41,6 +40,7 @@ int main(int argc, char *argv[])
             ("l, logfile", "Log to file", cxxopts::value<std::string>(logfile))
             ("s, seed", "Seed to use for the random number generator", cxxopts::value<std::string>(seedString))
             ("p, split", "Percentage split for the validation and training set", cxxopts::value<double>(percentageSplit))
+            ("e, export", "File to export the trained model to", cxxopts::value<std::string>(exportPath))
             ("v, verbose", "Specify verbosity, up to -vvv", cxxopts::value<bool>(verbose))
             ("dataroot", "Location of dataset", cxxopts::value<std::vector<std::string>>(args));
     options.parse_positional("dataroot");
@@ -108,6 +108,7 @@ int main(int argc, char *argv[])
         ss << "stdout";
     }
 
+#ifdef USE_LOG4CXX
     log4cxx::MDC::put("pid", std::to_string(getpid()));
     log4cxx::helpers::Properties properties;
     properties.put("log4j.rootCategory", ss.str());
@@ -117,22 +118,33 @@ int main(int argc, char *argv[])
     properties.put("log4j.appender.stdout.layout.ConversionPattern", "\u001b[0;2m%d{yyyy-MM-dd HH:mm:ss.SSS}\u001b[m %5p  %X{pid} \u001b[0;2m---\u001b[m \u001b[0;2m[%14t]\u001b[m \u001b[0;36m%-12.12logger{39}\u001b[m \u001b[0;2m:\u001b[m %m%n");
     //properties.put("log4j.appender.stdout.layout.ConversionPattern", "\u001b[0;2m%d{yyyy-MM-dd HH:mm:ss.SSS}\u001b[m %5p  %X{pid} \u001b[0;2m---\u001b[m \u001b[0;2m[%14t]\u001b[m \u001b[0;36m%-32.32F:%L{39}\u001b[m \u001b[0;2m:\u001b[m %m%n");
     log4cxx::PropertyConfigurator::configure(properties);
-    log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("Main");
-    LOG4CXX_INFO(logger, "Starting Potato DDSL");
+#endif
+    Logger logger = PotatoLogger::getLogger("Main");
+    POTATO_INFO(logger, "Starting Potato DDSL");
 
     namespace fs = boost::filesystem;
     if (dataRoot.at(0) != '/')
         dataRoot = fs::absolute(dataRoot).string();
     if (!fs::is_directory(modelDir))
     {
-        LOG4CXX_ERROR(logger, "Model directory doesn't exists or isn't a directory");
+        POTATO_ERROR(logger, "Model directory doesn't exists or isn't a directory");
         return 2;
     }
+    if (!exportPath.empty() && exportPath.at(0) != '/')
+    {
+        exportPath = fs::absolute(exportPath).string();
+        if (endsWith(exportPath, "caffemodel.ddsl"))
+        {
+            POTATO_ERROR(logger, "Export path has invalid extension, must be caffemodel.ddsl");
+            return 3;
+        }
+    }
+
     boost::system::error_code fileError;
     fs::current_path(modelDir, fileError);
     if (fileError.value() != 0)
     {
-        LOG4CXX_ERROR(logger, "Could not change directory: " << fileError.message());
+        POTATO_ERROR(logger, "Could not change directory: " << fileError.message());
         return 2;
     }
     fs::directory_iterator end_iter;
@@ -149,21 +161,21 @@ int main(int argc, char *argv[])
             if (filename.find("model") != std::string::npos)
             {
                 modelName = iter->path().filename().string();
-                LOG4CXX_INFO(logger, "Found model " << iter->path().string());
+                POTATO_INFO(logger, "Found model " << iter->path().string());
             }
             else if (filename.find("solver") != std::string::npos)
             {
                 solverName = iter->path().filename().string();
-                LOG4CXX_INFO(logger, "Found model " << iter->path().string());
+                POTATO_INFO(logger, "Found model " << iter->path().string());
             }
         }
     }
     if (modelName.empty() || solverName.empty())
     {
-        LOG4CXX_ERROR(logger, "Directory \"" << modelDir << "\" doesn't contain model or solver");
+        POTATO_ERROR(logger, "Directory \"" << modelDir << "\" doesn't contain model or solver");
         return 3;
     }
 
-    Program p(dataRoot, modelName, solverName, percentageSplit);
+    Program p(dataRoot, modelName, solverName, exportPath, percentageSplit);
     return p.run();
 }

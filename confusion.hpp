@@ -22,31 +22,31 @@ public:
     double _c;
     vector<vector<double>> _per; //per[classes][4]
     vector<vector<string>> _ind; //ind[classes][classes]
-    vector<vector<uint>> _cm; //cm[classes][classes]
+    vector<vector<unsigned int>> _cm; //cm[classes][classes]
 
-    Confusion(uint classes, uint samples) : _classes(classes), _samples(samples),
+    Confusion(unsigned int classes, unsigned int samples) : _classes(classes), _samples(samples),
                                           _per(classes, vector<double>(4)), _ind(classes, vector<string>(classes)),
-                                          _cm(classes, vector<uint>(classes)) { }
+                                          _cm(classes, vector<unsigned int>(classes)) { }
 
     Confusion(vector<vector<double>> targets, vector<vector<double>> outputs) {
         confusion(targets, outputs);
     }
 
-    Confusion(vector<uint> targets, vector<uint> outputs) {
+    Confusion(vector<unsigned int> targets, vector<unsigned int> outputs) {
         vector<vector<double>> tar;
         vector<vector<double>> out;
         convertToBooleanMatrix(targets, outputs, tar, out);
         confusion(tar, out);
     }
 
-    static void convertToBooleanMatrix(vector<uint> targets, vector<uint> outputs, vector<vector<double>> &tar,
+    static void convertToBooleanMatrix(vector<unsigned int> targets, vector<unsigned int> outputs, vector<vector<double>> &tar,
                                 vector<vector<double>> &out) {
-        uint numClasses =
+        unsigned int numClasses =
                 *max_element(targets.begin(), targets.end()) - *min_element(targets.begin(), targets.end()) + 1;
         size_t numSamples = targets.size();
         vector<vector<double>> t(numClasses, vector<double>(numSamples));
         vector<vector<double>> o(numClasses, vector<double>(numSamples));
-        for (uint i = 0; i < numSamples; ++i) {
+        for (unsigned int i = 0; i < numSamples; ++i) {
             t[targets.at(i)][i] = 1;
             o[outputs.at(i)][i] = 1;
         }
@@ -90,11 +90,11 @@ public:
         _classes = numClasses;
         _samples = numSamples;
         //Transform outputs   (maximum value is set to 1 and other values to 0, column-wise)
-        for (uint col = 0; col < numSamples; col++) {
+        for (unsigned int col = 0; col < numSamples; col++) {
             double max = outputs[0][col];
-            uint ind = 0;
+            unsigned int ind = 0;
 
-            for (uint row = 1; row < numClasses; row++) {
+            for (unsigned int row = 1; row < numClasses; row++) {
                 if (outputs[row][col] > max) {
                     max = outputs[row][col];
                     ind = row;
@@ -106,9 +106,9 @@ public:
         }
 
         //Confusion value
-        uint count = 0;
-        for (uint row = 0; row < numClasses; row++) {
-            for (uint col = 0; col < numSamples; col++) {
+        unsigned int count = 0;
+        for (unsigned int row = 0; row < numClasses; row++) {
+            for (unsigned int col = 0; col < numSamples; col++) {
                 if (targets[row][col] != outputs[row][col])
                     count++;
             }
@@ -116,18 +116,18 @@ public:
         double c = static_cast<double>(count) / static_cast<double>(2 * numSamples);
 
         // Confusion matrix
-        vector<vector<uint>> cm(numClasses, vector<uint>(numClasses));
-        for (uint row = 0; row < numClasses; row++) {
-            for (uint col = 0; col < numClasses; col++) {
+        vector<vector<unsigned int>> cm(numClasses, vector<unsigned int>(numClasses));
+        for (unsigned int row = 0; row < numClasses; row++) {
+            for (unsigned int col = 0; col < numClasses; col++) {
                 cm[row][col] = 0;
             }
         }
 
-        vector<uint> i(numSamples);
-        vector<uint> j(numSamples);
+        vector<unsigned int> i(numSamples);
+        vector<unsigned int> j(numSamples);
 
-        for (uint col = 0; col < numSamples; col++) {
-            for (uint row = 0; row < numClasses; row++) {
+        for (unsigned int col = 0; col < numSamples; col++) {
+            for (unsigned int row = 0; row < numClasses; row++) {
                 if (targets[row][col] == 1.0) {
                     i[col] = row;
                     break;
@@ -135,8 +135,8 @@ public:
             }
         }
 
-        for (uint col = 0; col < numSamples; col++) {
-            for (uint row = 0; row < numClasses; row++) {
+        for (unsigned int col = 0; col < numSamples; col++) {
+            for (unsigned int row = 0; row < numClasses; row++) {
                 if (outputs[row][col] == 1.0) {
                     j[col] = row;
                     break;
@@ -144,18 +144,18 @@ public:
             }
         }
 
-        for (uint col = 0; col < numSamples; col++) {
+        for (unsigned int col = 0; col < numSamples; col++) {
             cm[i[col]][j[col]] = cm[i[col]][j[col]] + 1;
         }
 
         // Indices
         vector<vector<string>> ind(numClasses, vector<string>(numClasses));
-        for (uint row = 0; row < numClasses; row++)
-            for (uint col = 0; col < numClasses; col++)
+        for (unsigned int row = 0; row < numClasses; row++)
+            for (unsigned int col = 0; col < numClasses; col++)
                 ind[row][col] = "";
 
 
-        for (uint col = 0; col < numSamples; col++) {
+        for (unsigned int col = 0; col < numSamples; col++) {
             if (ind[i[col]][j[col]] == "")
                 ind[i[col]][j[col]] = to_string(col);
             else
@@ -164,23 +164,23 @@ public:
 
         // Percentages
         vector<vector<double>> per(numClasses, vector<double>(4));
-        for (uint row = 0; row < numClasses; row++) {
-            for (uint col = 0; col < 4; col++) {
+        for (unsigned int row = 0; row < numClasses; row++) {
+            for (unsigned int col = 0; col < 4; col++) {
                 per[row][col] = 0.0;
             }
         }
 
-        for (uint row = 0; row < numClasses; row++) {
-            vector<uint> yi(numSamples);
-            vector<uint> ti(numSamples);
-            for (uint col = 0; col < numSamples; col++) {
-                yi[col] = static_cast<uint>(outputs[row][col]);
-                ti[col] = static_cast<uint>(targets[row][col]);
+        for (unsigned int row = 0; row < numClasses; row++) {
+            vector<unsigned int> yi(numSamples);
+            vector<unsigned int> ti(numSamples);
+            for (unsigned int col = 0; col < numSamples; col++) {
+                yi[col] = static_cast<unsigned int>(outputs[row][col]);
+                ti[col] = static_cast<unsigned int>(targets[row][col]);
 
             }
 
-            uint a = 0, b = 0;
-            for (uint col = 0; col < numSamples; col++) {
+            unsigned int a = 0, b = 0;
+            for (unsigned int col = 0; col < numSamples; col++) {
                 if (yi[col] != 1 && ti[col] == 1) a = a + 1;
                 if (yi[col] != 1) b = b + 1;
             }
@@ -189,7 +189,7 @@ public:
 
             a = 0;
             b = 0;
-            for (uint col = 0; col < numSamples; col++) {
+            for (unsigned int col = 0; col < numSamples; col++) {
                 if (yi[col] == 1 && ti[col] != 1) a = a + 1;
                 if (yi[col] == 1) b = b + 1;
             }
@@ -198,7 +198,7 @@ public:
 
             a = 0;
             b = 0;
-            for (uint col = 0; col < numSamples; col++) {
+            for (unsigned int col = 0; col < numSamples; col++) {
                 if (yi[col] == 1 && ti[col] == 1) a = a + 1;
                 if (yi[col] == 1) b = b + 1;
             }
@@ -206,7 +206,7 @@ public:
 
             a = 0;
             b = 0;
-            for (uint col = 0; col < numSamples; col++) {
+            for (unsigned int col = 0; col < numSamples; col++) {
                 if (yi[col] != 1 && ti[col] != 1) a = a + 1;
                 if (yi[col] != 1) b = b + 1;
             }
@@ -215,8 +215,8 @@ public:
         }
 
         //NAN handling
-        for (uint row = 0; row < numClasses; row++) {
-            for (uint col = 0; col < 4; col++) {
+        for (unsigned int row = 0; row < numClasses; row++) {
+            for (unsigned int col = 0; col < 4; col++) {
                 if (isnan(per[row][col]))
                     per[row][col] = 0.0;
             }
@@ -228,7 +228,7 @@ public:
         _per = per;
     }
 
-    static float round(float valueToRound, uint numberOfDecimalPlaces) {
+    static float round(float valueToRound, unsigned int numberOfDecimalPlaces) {
         float multiplicationFactor = static_cast<float>(pow(10, numberOfDecimalPlaces));
         float interestedInZeroDPs = valueToRound * multiplicationFactor;
         return roundf(interestedInZeroDPs) / multiplicationFactor;
@@ -240,9 +240,9 @@ public:
 
     void printCM(std::ostream &ss) {
         ss << "\tConfusion Matrix" << endl;
-        for (uint row = 0; row < _classes; row++) {
+        for (unsigned int row = 0; row < _classes; row++) {
             ss << "\t\t";
-            for (uint col = 0; col < _classes; col++) {
+            for (unsigned int col = 0; col < _classes; col++) {
                 ss << _cm[row][col] << " ";
             }
             ss << endl;
@@ -251,8 +251,8 @@ public:
 
     void printInd(std::ostream &ss) {
         ss << "\tIndices" << endl;
-        for (uint row = 0; row < _classes; row++) {
-            for (uint col = 0; col < _classes; col++) {
+        for (unsigned int row = 0; row < _classes; row++) {
+            for (unsigned int col = 0; col < _classes; col++) {
                 ss << "\t\t[" << _ind[row][col] << "]";
             }
             ss << endl;
@@ -261,9 +261,9 @@ public:
 
     void printPer(std::ostream &ss) {
         ss << "\tPercentages" << endl;
-        for (uint row = 0; row < _classes; row++) {
+        for (unsigned int row = 0; row < _classes; row++) {
             ss << "\t\t";
-            for (uint col = 0; col < 4; col++) {
+            for (unsigned int col = 0; col < 4; col++) {
                 ss << round(static_cast<float>(_per[row][col]), 2) << " ";
             }
         }
@@ -285,8 +285,8 @@ public:
     }
 
     static void print(vector<vector<double>> vec, std::ostream &ss) {
-        for (uint i = 0; i < vec.size(); ++i) {
-            for (uint j = 0; j < vec[0].size(); ++j) {
+        for (unsigned int i = 0; i < vec.size(); ++i) {
+            for (unsigned int j = 0; j < vec[0].size(); ++j) {
                 ss << vec[i][j] << " ";
             }
             ss << endl;

@@ -4,7 +4,7 @@
 #include <log4cxx/helpers/exception.h>
 #include <boost/filesystem.hpp>
 
-log4cxx::LoggerPtr DataLoader::logger = log4cxx::Logger::getLogger("Dataloader");
+Logger DataLoader::logger = PotatoLogger::getLogger("Dataloader");
 
 std::shared_ptr<LoadedData> DataLoader::load()
 {
@@ -12,13 +12,13 @@ std::shared_ptr<LoadedData> DataLoader::load()
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
     using std::chrono::milliseconds;
-    if (!fs::exists(datasetRoot) || !fs::is_directory(datasetRoot))
+    if (POTATO_UNLIKELY(!fs::exists(datasetRoot) || !fs::is_directory(datasetRoot)))
     {
         std::stringstream ss;
         ss << "Directory \"" << datasetRoot << "\" doesn't exist or isn't a directory" << std::endl;
         throw log4cxx::helpers::IOException(ss.str());
     }
-    LOG4CXX_INFO(logger, "Started loading images in directory \"" << datasetRoot << '"');
+    POTATO_INFO(logger, "Started loading images in directory \"" << datasetRoot << '"');
     std::shared_ptr<LoadedData> res = std::make_shared<LoadedData>(percentageSplit);
     auto startLoad = high_resolution_clock::now();
     fs::directory_iterator end_iter;
@@ -28,17 +28,17 @@ std::shared_ptr<LoadedData> DataLoader::load()
         if (fs::is_directory(iter->status()))
         {
             auto start = high_resolution_clock::now();
-            LOG4CXX_DEBUG(logger, "Found new class \"" << iter->path().filename().string() << '"');
+            POTATO_DEBUG(logger, "Found new class \"" << iter->path().filename().string() << '"');
             res->addClassWithName(loadImages(iter->path()), iter->path().filename().string());
-            LOG4CXX_DEBUG(logger, "Loaded " << (res->size() - lastSize) << " images in " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count() << "ms");
+            POTATO_DEBUG(logger, "Loaded " << (res->size() - lastSize) << " images in " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count() << "ms");
             lastSize = res->size();
         }
     }
-    if (res->empty())
+    if (POTATO_UNLIKELY(res->empty()))
     {
-        LOG4CXX_ERROR(logger, "Could not find any classes in directory \"" << datasetRoot << '"');
+        POTATO_ERROR(logger, "Could not find any classes in directory \"" << datasetRoot << '"');
     }
-    LOG4CXX_INFO(logger, "Loaded all " << res->size() << " images in " << duration_cast<milliseconds>(high_resolution_clock::now() - startLoad).count() << "ms");
+    POTATO_INFO(logger, "Loaded all " << res->size() << " images in " << duration_cast<milliseconds>(high_resolution_clock::now() - startLoad).count() << "ms");
     return res;
 }
 
@@ -53,15 +53,15 @@ std::vector<ImagePNG<float> > DataLoader::loadImages(boost::filesystem::path pat
     {
         std::string filename = iter->path().string();
         bool isPng = endsWith(filename, suffix);
-        if (fs::is_regular_file(iter->status()) && isPng)
+        if (POTATO_LIKELY(fs::is_regular_file(iter->status()) && isPng))
         {
             res.push_back(ImagePNG<float>(iter->path().string(), true));
-            LOG4CXX_TRACE(logger, "Dimensions of loaded image " << res.back().printSize());
+            POTATO_TRACE(logger, "Dimensions of loaded image " << res.back().printSize());
         }
     }
-    if (res.empty())
+    if (POTATO_UNLIKELY(res.empty()))
     {
-        LOG4CXX_ERROR(logger, "Could not find any png's in directory \"" << path << '"');
+        POTATO_ERROR(logger, "Could not find any png's in directory \"" << path << '"');
     }
     return res;
 }

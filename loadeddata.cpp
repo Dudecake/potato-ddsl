@@ -4,7 +4,7 @@
 #include <chrono>
 #include <ddsl.hpp>
 
-log4cxx::LoggerPtr LoadedData::logger = log4cxx::Logger::getLogger("LoadedData");
+Logger LoadedData::logger = PotatoLogger::getLogger("LoadedData");
 
 DataSet<std::vector<DSImage::ImagePNG<float> >, std::vector<float>> LoadedData::splitSets()
 {
@@ -14,15 +14,15 @@ DataSet<std::vector<DSImage::ImagePNG<float> >, std::vector<float>> LoadedData::
     auto start = high_resolution_clock::now();
     std::vector<std::pair<DSImage::ImagePNG<float>, float>> validationPair;
     std::vector<std::pair<DSImage::ImagePNG<float>, float>> trainingPair;
-    uint classSamples = 0;
-    std::set<uint> indexes;
+    unsigned int classSamples = 0;
+    std::set<unsigned int> indexes;
     double classSplit = (percentageSplit * 3.0) / static_cast<double>(classOffsets.size());
 
-    for (uint i = 0; i < classOffsets.size() - 1; i++)
+    for (unsigned int i = 0; i < classOffsets.size() - 1; i++)
     {
-        uint classSize = classOffsets.at(i + 1) - classOffsets.at(i);
-        classSamples += static_cast<uint>(static_cast<double>(classSize) * (classSplit / 100.0));
-        uint currentIndex = 0;
+        unsigned int classSize = classOffsets.at(i + 1) - classOffsets.at(i);
+        classSamples += static_cast<unsigned int>(static_cast<double>(classSize) * (classSplit / 100.0));
+        unsigned int currentIndex = 0;
         //for (int j = classOffsets.at(i); j < classOffsets.at(i + 1); j++)
         while (indexes.size() < classSamples)
         {
@@ -33,7 +33,7 @@ DataSet<std::vector<DSImage::ImagePNG<float> >, std::vector<float>> LoadedData::
                 indexes.insert(currentIndex);
             }
         }
-        for (uint j = classOffsets.at(i); j < classOffsets.at(i + 1); j++)
+        for (unsigned int j = classOffsets.at(i); j < classOffsets.at(i + 1); j++)
         {
             if (indexes.find(j) == indexes.end())
             {
@@ -57,7 +57,7 @@ DataSet<std::vector<DSImage::ImagePNG<float> >, std::vector<float>> LoadedData::
         training.push_back(item.first);
         trainingClasses.push_back(item.second);
     }
-    LOG4CXX_DEBUG(logger, "Split training and validation (" << training.size() << 'x' << validation.size() << ") set in " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count() << "ms");
+    POTATO_DEBUG(logger, "Split training and validation (" << training.size() << 'x' << validation.size() << ") set in " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count() << "ms");
     return DataSet<std::vector<DSImage::ImagePNG<float>>, std::vector<float>>(training, trainingClasses, validation, validationClasses);
 }
 
@@ -89,7 +89,6 @@ DataSet<std::vector<DSLib::Matrix<DSLib::Matrix<float>>>, std::vector<float>> Lo
     DataSet<std::vector<DSImage::ImagePNG<float>>, std::vector<float>> splitSet = splitSets();
     //std::vector<DSLib::Matrix<float>> trainImages{ DSLib::Matrix<float>() }, valImages{ DSLib::Matrix<float>() };
     std::vector<DSLib::Matrix<DSLib::Matrix<float>>> trainImages{ DSLib::Matrix<DSLib::Matrix<float>>() }, valImages{ DSLib::Matrix<DSLib::Matrix<float>>() };
-
     for (auto imageIt = splitSet.first.begin(); imageIt != splitSet.first.end(); imageIt++)
     {
         trainImages.back() | (*imageIt).getChannel(0).mat() | (*imageIt).getChannel(1).mat() | (*imageIt).getChannel(2).mat();

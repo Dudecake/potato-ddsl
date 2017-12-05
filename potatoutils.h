@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 #include <random>
-#include <log4cxx/logger.h>
 
 static std::mt19937_64 rng;
 
@@ -19,6 +18,46 @@ LOG4CXX_ERROR(logger, "string" << e);\
 } catch (const std::exception &e) {\
 LOG4CXX_ERROR(logger, e.what());\
 }
+
+#ifndef POTATO_UNLIKELY
+#if __GNUC__ >= 3
+/**
+Provides optimization hint to the compiler
+to optimize for the expression being false.
+@param expr boolean expression.
+@returns value of expression.
+*/
+#define POTATO_UNLIKELY(expr) __builtin_expect(expr, 0)
+#else
+/**
+Provides optimization hint to the compiler
+to optimize for the expression being false.
+@param expr boolean expression.
+@returns value of expression.
+**/
+#define POTATO_UNLIKELY(expr) expr
+#endif
+#endif
+
+#ifndef POTATO_LIKELY
+#if __GNUC__ >= 3
+/**
+Provides optimization hint to the compiler
+to optimize for the expression being false.
+@param expr boolean expression.
+@returns value of expression.
+*/
+#define POTATO_LIKELY(expr) __builtin_expect(!(expr), 0)
+#else
+/**
+Provides optimization hint to the compiler
+to optimize for the expression being false.
+@param expr boolean expression.
+@returns value of expression.
+**/
+#define POTATO_LIKELY(expr) expr
+#endif
+#endif
 
 inline bool endsWith(std::string &value, std::string &suffix)
 {

@@ -2,18 +2,20 @@
 #define PROGRAM_H
 
 #include <string>
-#include <log4cxx/logger.h>
+
+#include "potatologger.h"
 
 class Program
 {
     public:
-        explicit Program(std::string datasetRoot, std::string modelName, std::string solverName, double percentageSplit = 25) : datasetRoot(datasetRoot), modelName(modelName), solverName(solverName), percentageSplit(percentageSplit) {  }
+        explicit Program(std::string datasetRoot, std::string modelName, std::string solverName, std::string exportPath = std::string(), double percentageSplit = 25) : datasetRoot(datasetRoot), modelName(modelName), solverName(solverName), exportPath(exportPath), percentageSplit(percentageSplit) {  }
         int run();
     private:
-        static log4cxx::LoggerPtr logger;
+        static Logger logger;
         std::string datasetRoot;
         std::string modelName;
         std::string solverName;
+        std::string exportPath;
         double percentageSplit;
 };
 

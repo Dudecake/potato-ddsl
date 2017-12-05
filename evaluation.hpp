@@ -63,7 +63,7 @@ public:
 
     void evaluation(Confusion &confusion){
         vector<vector<double> >per(confusion._per);
-        uint numClasses = static_cast<uint>(confusion._classes);
+        unsigned int numClasses = static_cast<unsigned int>(confusion._classes);
 
         //Average Accuracy (The average per-class effectiveness of a classifier)
         double avgAccuracy = 0.0;
@@ -86,7 +86,7 @@ public:
         double rNumerator = 0.0;
         double rDenominator = 0.0;
 
-        for (uint i = 0; i < numClasses; i++) {
+        for (unsigned int i = 0; i < numClasses; i++) {
             fn = per[i][0];
             fp = per[i][1];
             tp = per[i][2];

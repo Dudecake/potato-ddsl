@@ -5,9 +5,9 @@
 #include <memory>
 #include <hpp/DS_Types.hpp>
 #include <boost/filesystem.hpp>
-#include <log4cxx/logger.h>
 
 #include "potatoutils.h"
+#include "potatologger.h"
 #include "loadeddata.h"
 
 class DataLoader
@@ -41,7 +41,7 @@ class DataLoader
         std::shared_ptr<LoadedData> load();
 
     private:
-        static log4cxx::LoggerPtr logger;
+        static Logger logger;
         std::weak_ptr<DataLoader> weakSelf;
         long classes;
         std::string datasetRoot;
