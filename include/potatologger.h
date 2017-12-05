@@ -1,7 +1,52 @@
 #ifndef POTATLOGGER_H
 #define POTATLOGGER_H
 
-#ifdef USE_LOG4CXX
+#if defined(USE_GLOG)
+
+#include <iostream>
+#include <glog/logging.h>
+
+typedef std::ostream& Logger;
+
+/**
+Logs a message to a specified logger with the DEBUG level.
+
+@param logger the logger to be used.
+@param message the message string to log.
+*/
+#define POTATO_DEBUG(logger, message) static_cast<void>(logger), LOG(INFO) << message
+
+/**
+Logs a message to a specified logger with the TRACE level.
+
+@param logger the logger to be used.
+@param message the message string to log.
+*/
+#define POTATO_TRACE(logger, message) static_cast<void>(logger), std::stringstream() << message
+
+/**
+Logs a message to a specified logger with the INFO level.
+
+@param logger the logger to be used.
+@param message the message string to log.
+*/
+#define POTATO_INFO(logger, message) static_cast<void>(logger), LOG(INFO) << message
+/**
+Logs a message to a specified logger with the WARN level.
+
+@param logger the logger to be used.
+@param message the message string to log.
+*/
+#define POTATO_WARN(logger, message) static_cast<void>(logger), LOG(WARNING) << message
+/**
+Logs a message to a specified logger with the ERROR level.
+
+@param logger the logger to be used.
+@param message the message string to log.
+*/
+#define POTATO_ERROR(logger, message) static_cast<void>(logger), LOG(ERROR) << message
+
+#elif defined(USE_LOG4CXX)
 #include <log4cxx/logger.h>
 
 typedef log4cxx::LoggerPtr Logger;
@@ -44,7 +89,9 @@ Logs a message to a specified logger with the ERROR level.
 */
 #define POTATO_ERROR(logger, message) LOG4CXX_ERROR(logger, message)
 #else
-typedef int Logger;
+#include <iostream>
+
+typedef std::ostream* Logger;
 
 /**
 Logs a message to a specified logger with the DEBUG level.
@@ -52,7 +99,7 @@ Logs a message to a specified logger with the DEBUG level.
 @param logger the logger to be used.
 @param message the message string to log.
 */
-#define POTATO_DEBUG(logger, message) static_cast<void>(logger), static_cast<void>(message)
+#define POTATO_DEBUG(logger, message) static_cast<void>(logger), std::stringstream() << message
 
 /**
 Logs a message to a specified logger with the TRACE level.
@@ -60,7 +107,7 @@ Logs a message to a specified logger with the TRACE level.
 @param logger the logger to be used.
 @param message the message string to log.
 */
-#define POTATO_TRACE(logger, message) static_cast<void>(logger), static_cast<void>(message)
+#define POTATO_TRACE(logger, message) static_cast<void>(logger), std::stringstream() << message
 
 /**
 Logs a message to a specified logger with the INFO level.
@@ -68,21 +115,21 @@ Logs a message to a specified logger with the INFO level.
 @param logger the logger to be used.
 @param message the message string to log.
 */
-#define POTATO_INFO(logger, message) static_cast<void>(logger), static_cast<void>(message)
+#define POTATO_INFO(logger, message) logger << message
 /**
 Logs a message to a specified logger with the WARN level.
 
 @param logger the logger to be used.
 @param message the message string to log.
 */
-#define POTATO_WARN(logger, message) static_cast<void>(logger), static_cast<void>(message)
+#define POTATO_WARN(logger, message) logger << message
 /**
 Logs a message to a specified logger with the ERROR level.
 
 @param logger the logger to be used.
 @param message the message string to log.
 */
-#define POTATO_ERROR(logger, message) static_cast<void>(logger), static_cast<void>(message)
+#define POTATO_ERROR(logger, message) logger << message
 #endif
 
 class PotatoLogger
@@ -90,10 +137,12 @@ class PotatoLogger
     public:
         static inline Logger getLogger(const std::string &loggerName)
         {
-            #ifdef USE_LOG4CXX
+            #ifdef USE_GLOG
+               return std::cout;
+            #elif defined(USE_LOG4CXX)
             return log4cxx::Logger::getLogger(loggerName);
             #else
-            return 0;
+            return &std::cout;
             #endif
         }
     private:

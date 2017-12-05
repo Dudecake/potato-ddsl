@@ -42,9 +42,9 @@ std::shared_ptr<LoadedData> DataLoader::load()
     return res;
 }
 
-std::vector<ImagePNG<float> > DataLoader::loadImages(boost::filesystem::path path)
+std::vector<DSImage::ImagePNG<float> > DataLoader::loadImages(boost::filesystem::path path)
 {
-    std::vector<ImagePNG<float>> res;
+    std::vector<DSImage::ImagePNG<float>> res;
 
     namespace fs = boost::filesystem;
     fs::directory_iterator end_iter;
@@ -55,7 +55,7 @@ std::vector<ImagePNG<float> > DataLoader::loadImages(boost::filesystem::path pat
         bool isPng = endsWith(filename, suffix);
         if (POTATO_LIKELY(fs::is_regular_file(iter->status()) && isPng))
         {
-            res.push_back(ImagePNG<float>(iter->path().string(), true));
+            res.push_back(DSImage::ImagePNG<float>(iter->path().string(), true));
             POTATO_TRACE(logger, "Dimensions of loaded image " << res.back().printSize());
         }
     }

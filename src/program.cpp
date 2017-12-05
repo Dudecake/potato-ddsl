@@ -19,8 +19,6 @@ int Program::run()
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
     using std::chrono::milliseconds;
-    google::InitGoogleLogging("potato-ddsl");
-    google::LogToStderr();
     try
     {
         std::shared_ptr<DataLoader> loader = DataLoader::newSharedInstance()->withDataRoot(datasetRoot)->withDataSplit(percentageSplit);
@@ -112,7 +110,7 @@ int Program::run()
     }
     catch (log4cxx::helpers::Exception &ex)
     {
-        POTATO_ERROR(logger, "Failed to load the dataset: " << ex.what())
+        POTATO_ERROR(logger, "Failed to load the dataset: " << ex.what());
     }
     //HANDLE_DDSL_ERROR
     return 0;

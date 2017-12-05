@@ -108,7 +108,10 @@ int main(int argc, char *argv[])
         ss << "stdout";
     }
 
-#ifdef USE_LOG4CXX
+#if defined(USE_GLOG)
+    google::InitGoogleLogging("potato-ddsl");
+    google::LogToStderr();
+#elif defined(USE_LOG4CXX)
     log4cxx::MDC::put("pid", std::to_string(getpid()));
     log4cxx::helpers::Properties properties;
     properties.put("log4j.rootCategory", ss.str());

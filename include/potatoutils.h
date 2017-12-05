@@ -19,6 +19,8 @@ LOG4CXX_ERROR(logger, "string" << e);\
 LOG4CXX_ERROR(logger, e.what());\
 }
 
+#define UNUSED(val) static_cast<void>(val)
+
 #ifndef POTATO_UNLIKELY
 #if __GNUC__ >= 3
 /**
@@ -47,7 +49,7 @@ to optimize for the expression being false.
 @param expr boolean expression.
 @returns value of expression.
 */
-#define POTATO_LIKELY(expr) __builtin_expect(!(expr), 0)
+#define POTATO_LIKELY(expr) __builtin_expect((expr), 1)
 #else
 /**
 Provides optimization hint to the compiler
