@@ -1,9 +1,11 @@
 #include <iostream>
+#ifdef USE_LOG4CXX
 #include <log4cxx/logger.h>
 #include <log4cxx/basicconfigurator.h>
 #include <log4cxx/mdc.h>
 #include <log4cxx/propertyconfigurator.h>
 #include <log4cxx/helpers/properties.h>
+#endif //USE_LOG4CXX
 #include <boost/filesystem.hpp>
 #include <caffe/common.hpp>
 
@@ -29,6 +31,8 @@ int main(int argc, char *argv[])
     bool verbose = false;
     std::string seedString;
     std::string modelDir;
+    std::string modelName;
+    std::string solverName;
     std::string logfile;
     std::vector<std::string> args;
     std::string dataRoot;
@@ -36,7 +40,9 @@ int main(int argc, char *argv[])
     double percentageSplit = 25;
     options.add_options()
             ("h, help", "Get help message", cxxopts::value<bool>(needHelp))
-            ("m, model", "Specify model and solver directory", cxxopts::value<std::string>(modelDir))
+            ("m, modeldir", "Specify model and solver directory", cxxopts::value<std::string>(modelDir))
+            ("model", "Directly specify model", cxxopts::value<std::string>(modelName))
+            ("solver", "Directly specify solver", cxxopts::value<std::string>(solverName))
             ("l, logfile", "Log to file", cxxopts::value<std::string>(logfile))
             ("s, seed", "Seed to use for the random number generator", cxxopts::value<std::string>(seedString))
             ("p, split", "Percentage split for the validation and training set", cxxopts::value<double>(percentageSplit))
@@ -46,7 +52,7 @@ int main(int argc, char *argv[])
     options.parse_positional("dataroot");
     options.parse(argc, argv);
 
-    if (modelDir.empty())
+    if (modelDir.empty() && modelName.empty() && solverName.empty())
     {
         std::cout << "Need to supply model directory" << std::endl;
         needHelp = error = true;
@@ -128,7 +134,7 @@ int main(int argc, char *argv[])
     namespace fs = boost::filesystem;
     if (dataRoot.at(0) != '/')
         dataRoot = fs::absolute(dataRoot).string();
-    if (!fs::is_directory(modelDir))
+    if (!fs::is_directory(modelDir) && (modelName.empty() || solverName.empty()))
     {
         POTATO_ERROR(logger, "Model directory doesn't exists or isn't a directory");
         return 2;
@@ -143,33 +149,55 @@ int main(int argc, char *argv[])
         }
     }
 
-    boost::system::error_code fileError;
-    fs::current_path(modelDir, fileError);
-    if (fileError.value() != 0)
+    if (!modelName.empty() && !solverName.empty())
     {
-        POTATO_ERROR(logger, "Could not change directory: " << fileError.message());
-        return 2;
-    }
-    fs::directory_iterator end_iter;
-    std::string suffix(".prototxt");
-    std::string modelName;
-    std::string solverName;
-    for (fs::directory_iterator iter(modelDir); iter != end_iter; iter++)
-    {
-        std::string filename = iter->path().filename().string();
-        bool isPrototxt = endsWith(filename, suffix);
-        if (fs::is_regular_file(iter->status()) && isPrototxt)
+        fs::path modelPath = fs::path(modelName).parent_path();
+        fs::path solverPath = fs::path(solverName).parent_path();
+        if (modelPath.compare(solverPath) == 0)
         {
-            std::transform(filename.begin(), filename.end(), filename.begin(), [](unsigned char c){ return std::tolower(c); });
-            if (filename.find("model") != std::string::npos)
+            modelDir = modelPath.string();
+            boost::system::error_code fileError;
+            fs::current_path(modelDir, fileError);
+            if (fileError.value() != 0)
             {
-                modelName = iter->path().filename().string();
-                POTATO_INFO(logger, "Found model " << iter->path().string());
+                POTATO_ERROR(logger, "Could not change directory: " << fileError.message());
+                return 2;
             }
-            else if (filename.find("solver") != std::string::npos)
+        }
+        else
+        {
+            POTATO_INFO(logger, "Model and solver not in same directory, assuming absolute paths")
+        }
+    }
+    else
+    {
+        boost::system::error_code fileError;
+        fs::current_path(modelDir, fileError);
+        if (fileError.value() != 0)
+        {
+            POTATO_ERROR(logger, "Could not change directory: " << fileError.message());
+            return 2;
+        }
+        fs::directory_iterator end_iter;
+        std::string suffix(".prototxt");
+
+        for (fs::directory_iterator iter(modelDir); iter != end_iter; iter++)
+        {
+            std::string filename = iter->path().filename().string();
+            bool isPrototxt = endsWith(filename, suffix);
+            if (fs::is_regular_file(iter->status()) && isPrototxt)
             {
-                solverName = iter->path().filename().string();
-                POTATO_INFO(logger, "Found model " << iter->path().string());
+                std::transform(filename.begin(), filename.end(), filename.begin(), [](unsigned char c){ return std::tolower(c); });
+                if (filename.find("model") != std::string::npos)
+                {
+                    modelName = iter->path().filename().string();
+                    POTATO_INFO(logger, "Found model " << iter->path().string());
+                }
+                else if (filename.find("solver") != std::string::npos)
+                {
+                    solverName = iter->path().filename().string();
+                    POTATO_INFO(logger, "Found model " << iter->path().string());
+                }
             }
         }
     }

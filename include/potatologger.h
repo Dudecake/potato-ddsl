@@ -91,7 +91,7 @@ Logs a message to a specified logger with the ERROR level.
 #else
 #include <iostream>
 
-typedef std::ostream* Logger;
+typedef std::ostream& Logger;
 
 /**
 Logs a message to a specified logger with the DEBUG level.
@@ -142,7 +142,7 @@ class PotatoLogger
             #elif defined(USE_LOG4CXX)
             return log4cxx::Logger::getLogger(loggerName);
             #else
-            return &std::cout;
+            return std::cout;
             #endif
         }
     private:
