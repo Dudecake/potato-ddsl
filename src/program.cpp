@@ -80,10 +80,11 @@ int Program::run()
         csvOut.set_delimiter(';', std::string());
         if (writeHeaders)
         {
-            csvOut << "Phase" << "DataSet" << "Average System Accuracy" << "System Error" << "Precision (Micro)" << "Recall (Micro)" << "Fscore (Micro)" << "Precision (Macro)" << "Recall (Macro)" << "Fscore (Macro)" << NEWLINE;
+            csvOut << "Phase" << "DataSet" << "model" << "Average System Accuracy" << "System Error" << "Precision (Micro)" << "Recall (Micro)" << "Fscore (Micro)" << "Precision (Macro)" << "Recall (Macro)" << "Fscore (Macro)" << NEWLINE;
         }
         std::string dataSetName = datasetRoot.substr(datasetRoot.find_last_of("/") + 1);
-        csvOut << "Train" << dataSetName << eval._avgAccuray << eval._errRate << eval._precisionMicro << eval._recallMicro << eval._fscoreMicro << eval._precisionMacro << eval._recallMacro << eval._fscoreMacro << NEWLINE;
+        std::string cleanModelName = modelName.substr(modelName.find_last_of("/") + 1);
+        csvOut << "Train" << dataSetName << cleanModelName << eval._avgAccuray << eval._errRate << eval._precisionMicro << eval._recallMicro << eval._fscoreMicro << eval._precisionMacro << eval._recallMacro << eval._fscoreMacro << NEWLINE;
 
         DSLib::Table<> valScore = pipeline.train(modelData(modelData[DSTypes::ctSplit] == 1.f));
         temp = valScore.findMatrix(DSTypes::ctResult, DSTypes::dtFloat)->data();
@@ -101,7 +102,7 @@ int Program::run()
 //        bufferString.pop_back();
         POTATO_INFO(logger, "Results of evaluation:\n" << ss.str());
 
-        csvOut << "Val" << dataSetName << eval._avgAccuray << eval._errRate << eval._precisionMicro << eval._recallMicro << eval._fscoreMicro << eval._precisionMacro << eval._recallMacro << eval._fscoreMacro << NEWLINE;
+        csvOut << "Val" << dataSetName << cleanModelName << eval._avgAccuray << eval._errRate << eval._precisionMicro << eval._recallMicro << eval._fscoreMicro << eval._precisionMacro << eval._recallMacro << eval._fscoreMacro << NEWLINE;
         csvOut.flush();
         if (!exportPath.empty())
         {
