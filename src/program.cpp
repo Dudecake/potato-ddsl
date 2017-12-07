@@ -11,6 +11,7 @@
 #include "dataset.h"
 #include "confusion.hpp"
 #include "evaluation.hpp"
+#include "minicsv.h"
 
 Logger Program::logger = PotatoLogger::getLogger("Program");
 
@@ -33,12 +34,12 @@ int Program::run()
                 (((DSTypes::ctFeature | dataSet.first) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, dataSet.second)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, 0.f))) ^
                   ((DSTypes::ctFeature | dataSet.third) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, dataSet.fourth)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, 1.f))));
         std::stringstream ss;
-        modelData.printLess(ss);
-        std::string bufferString = ss.str();
-        ss.str(std::string());
-        bufferString.pop_back();
+//        modelData.printLess(ss);
+//        std::string bufferString = ss.str();
+//        ss.str(std::string());
+//        bufferString.pop_back();
 
-        POTATO_TRACE(logger, "Shape of data to load in model:\n" << bufferString);
+//        POTATO_TRACE(logger, "Shape of data to load in model:\n" << bufferString);
 
         #ifdef CPU_ONLY
         caffe::Caffe::set_mode(caffe::Caffe::Brew::CPU);
@@ -68,6 +69,22 @@ int Program::run()
 //        bufferString = ss.str();
 //        bufferString.pop_back();
         POTATO_INFO(logger, "Results of training:\n" << ss.str());
+
+        #ifdef POTATO_UNIX
+        std::string csvName = "/var/lib/potato-ddsl/results.csv";
+        #else
+        std::string csvName = datasetRoot + boost::filesystem::path::preferred_separator + "results.csv";
+        #endif // POTATO_UNIX
+        bool writeHeaders = !boost::filesystem::exists(csvName);
+        mini::csv::ofstream csvOut(csvName, std::ios_base::app);
+        csvOut.set_delimiter(';', std::string());
+        if (writeHeaders)
+        {
+            csvOut << "Phase" << "DataSet" << "Average System Accuracy" << "System Error" << "Precision (Micro)" << "Recall (Micro)" << "Fscore (Micro)" << "Precision (Macro)" << "Recall (Macro)" << "Fscore (Macro)" << NEWLINE;
+        }
+        std::string dataSetName = datasetRoot.substr(datasetRoot.find_last_of("/") + 1);
+        csvOut << "Train" << dataSetName << eval._avgAccuray << eval._errRate << eval._precisionMicro << eval._recallMicro << eval._fscoreMicro << eval._precisionMacro << eval._recallMacro << eval._fscoreMacro << NEWLINE;
+
         DSLib::Table<> valScore = pipeline.train(modelData(modelData[DSTypes::ctSplit] == 1.f));
         temp = valScore.findMatrix(DSTypes::ctResult, DSTypes::dtFloat)->data();
         ss.str(std::string());
@@ -81,8 +98,11 @@ int Program::run()
 //        valScore.print(ss);
 //        bufferString = ss.str();
 //        ss.str(std::string());
-        bufferString.pop_back();
+//        bufferString.pop_back();
         POTATO_INFO(logger, "Results of evaluation:\n" << ss.str());
+
+        csvOut << "Val" << dataSetName << eval._avgAccuray << eval._errRate << eval._precisionMicro << eval._recallMicro << eval._fscoreMicro << eval._precisionMacro << eval._recallMacro << eval._fscoreMacro << NEWLINE;
+        csvOut.flush();
         if (!exportPath.empty())
         {
             start = high_resolution_clock::now();
