@@ -24,15 +24,15 @@ int Program::run()
     {
         std::shared_ptr<DataLoader> loader = DataLoader::newSharedInstance()->withDataRoot(datasetRoot)->withDataSplit(percentageSplit);
         std::shared_ptr<LoadedData> data = loader->load();
-//        DataSet<std::vector<DSImage::ImagePNG<float>>, std::vector<float>> dataSet = data->splitSets();
-//        DSLib::Table<> modelData = //(DSTypes::dtString | "data" | "label" | "split") ^
-//                (((DSTypes::ctFeature | DSLib::Matrix<DSImage::ImagePNG<float>>(static_cast<unsigned int>(dataSet.first.size()), 1u, dataSet.first)) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, dataSet.second)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, 0.f))) ^
-//                  ((DSTypes::ctFeature | DSLib::Matrix<DSImage::ImagePNG<float>>(static_cast<unsigned int>(dataSet.third.size()), 1u, dataSet.third)) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, dataSet.fourth)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, 1.f))));
-
-        DataSet<DSLib::Matrix<DSLib::Matrix<float>>, std::vector<float>> dataSet = data->splitSetsAsMatrixII();
+        DataSet<std::vector<DSImage::ImagePNG<float>>, std::vector<float>> dataSet = data->splitSets();
         DSLib::Table<> modelData = //(DSTypes::dtString | "data" | "label" | "split") ^
-                (((DSTypes::ctFeature | dataSet.first) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, dataSet.second)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, 0.f))) ^
-                  ((DSTypes::ctFeature | dataSet.third) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, dataSet.fourth)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, 1.f))));
+                (((DSTypes::ctFeature | DSLib::Matrix<DSImage::ImagePNG<float>>(static_cast<unsigned int>(dataSet.first.size()), 1u, dataSet.first)) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, dataSet.second)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, 0.f))) ^
+                  ((DSTypes::ctFeature | DSLib::Matrix<DSImage::ImagePNG<float>>(static_cast<unsigned int>(dataSet.third.size()), 1u, dataSet.third)) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, dataSet.fourth)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, 1.f))));
+
+//        DataSet<DSLib::Matrix<DSLib::Matrix<float>>, std::vector<float>> dataSet = data->splitSetsAsMatrixII();
+//        DSLib::Table<> modelData = //(DSTypes::dtString | "data" | "label" | "split") ^
+//                (((DSTypes::ctFeature | dataSet.first) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, dataSet.second)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.second.size()), 1u, 0.f))) ^
+//                  ((DSTypes::ctFeature | dataSet.third) | (DSTypes::ctTarget | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, dataSet.fourth)) | (DSTypes::ctSplit | DSLib::Matrix<float>(static_cast<unsigned int>(dataSet.fourth.size()), 1u, 1.f))));
         std::stringstream ss;
 //        modelData.printLess(ss);
 //        std::string bufferString = ss.str();
@@ -80,13 +80,13 @@ int Program::run()
         csvOut.set_delimiter(';', std::string());
         if (writeHeaders)
         {
-            csvOut << "Phase" << "DataSet" << "model" << "Average System Accuracy" << "System Error" << "Precision (Micro)" << "Recall (Micro)" << "Fscore (Micro)" << "Precision (Macro)" << "Recall (Macro)" << "Fscore (Macro)" << NEWLINE;
+            csvOut << "Phase" << "DataSet" << "Model" << "Average System Accuracy" << "System Error" << "Precision (Micro)" << "Recall (Micro)" << "Fscore (Micro)" << "Precision (Macro)" << "Recall (Macro)" << "Fscore (Macro)" << NEWLINE;
         }
         std::string dataSetName = datasetRoot.substr(datasetRoot.find_last_of("/") + 1);
-        std::string cleanModelName = modelName.substr(modelName.find_last_of("/") + 1);
+        std::string cleanModelName = modelName.substr(modelName.find_last_of("/") + 1, modelName.find_last_of("."));
         csvOut << "Train" << dataSetName << cleanModelName << eval._avgAccuray << eval._errRate << eval._precisionMicro << eval._recallMicro << eval._fscoreMicro << eval._precisionMacro << eval._recallMacro << eval._fscoreMacro << NEWLINE;
 
-        DSLib::Table<> valScore = pipeline.train(modelData(modelData[DSTypes::ctSplit] == 1.f));
+        DSLib::Table<> valScore = pipeline.apply(modelData(modelData[DSTypes::ctSplit] == 1.f));
         temp = valScore.findMatrix(DSTypes::ctResult, DSTypes::dtFloat)->data();
         ss.str(std::string());
         confusion = Confusion(std::vector<unsigned int>(dataSet.fourth.begin(), dataSet.fourth.end()), std::vector<unsigned int>(temp.data().begin(), temp.data().begin() + static_cast<long>(dataSet.fourth.size())));
@@ -106,9 +106,8 @@ int Program::run()
         csvOut.flush();
         if (!exportPath.empty())
         {
-            start = high_resolution_clock::now();
             pipeline.write(exportPath);
-            POTATO_INFO(logger, "Exported model in " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count() << "ms");
+            POTATO_INFO(logger, "Exported model to " << exportPath);
         }
 
         return 0;
