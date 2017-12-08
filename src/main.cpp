@@ -151,17 +151,22 @@ int main(int argc, char *argv[])
 
     if (!modelName.empty() && !solverName.empty())
     {
-        fs::path modelPath = fs::path(modelName).parent_path();
-        fs::path solverPath = fs::path(solverName).parent_path();
-        if (modelPath.compare(solverPath) == 0)
+        fs::path modelPath = fs::path(modelName);
+        fs::path solverPath = fs::path(solverName);
+        if (modelPath.parent_path().compare(solverPath.parent_path()) == 0)
         {
-            modelDir = modelPath.string();
-            boost::system::error_code fileError;
-            fs::current_path(modelDir, fileError);
-            if (fileError.value() != 0)
+            modelName = modelPath.filename().string();
+            solverName = solverPath.filename().string();
+            if (modelName.compare(modelPath.string()) != 0)
             {
-                POTATO_ERROR(logger, "Could not change directory: " << fileError.message());
-                return 2;
+                modelDir = modelPath.parent_path().string();
+                boost::system::error_code fileError;
+                fs::current_path(modelDir, fileError);
+                if (fileError.value() != 0)
+                {
+                    POTATO_ERROR(logger, "Could not change directory: " << fileError.message());
+                    return 2;
+                }
             }
         }
         else
