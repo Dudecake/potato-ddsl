@@ -48,7 +48,7 @@ class DataLoader
         double percentageSplit;
         DataLoader() : classes(0), datasetRoot(""), percentageSplit(25) {  }
 
-        static std::vector<ImagePNG<float>> loadImages(boost::filesystem::path path);
+        static std::vector<DSImage::ImagePNG<float>> loadImages(boost::filesystem::path path);
 };
 
 #endif // DATALOADER_H
