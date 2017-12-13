@@ -8,6 +8,7 @@
 #endif //USE_LOG4CXX
 #include <boost/filesystem.hpp>
 #include <caffe/common.hpp>
+#include <sched.h>
 
 #include "potatoutils.h"
 #include "potatologger.h"
@@ -67,6 +68,19 @@ int main(int argc, char *argv[])
         std::cout << options.help() << std::endl;
         return error;
     }
+    cpu_set_t set;
+    CPU_ZERO(&set);
+    if (std::thread::hardware_concurrency() != 0)
+        for (unsigned int i = 0; i < std::thread::hardware_concurrency(); i++)
+            CPU_SET(i, &set);
+    else
+    {
+        CPU_SET(0, &set);
+        CPU_SET(1, &set);
+        CPU_SET(2, &set);
+        CPU_SET(3, &set);
+    }
+    sched_setaffinity(0, sizeof(set), &set);
     dataRoot = args.front();
 
     uint64_t seed = std::hash<std::string>{}("dinges");
