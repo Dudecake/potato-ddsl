@@ -228,14 +228,14 @@ public:
         _per = per;
     }
 
-    static float round(float valueToRound, unsigned int numberOfDecimalPlaces) {
-        float multiplicationFactor = static_cast<float>(pow(10, numberOfDecimalPlaces));
-        float interestedInZeroDPs = valueToRound * multiplicationFactor;
-        return roundf(interestedInZeroDPs) / multiplicationFactor;
+    static double round(double valueToRound, unsigned int numberOfDecimalPlaces) {
+        double multiplicationFactor = pow(10, numberOfDecimalPlaces);
+        double interestedInZeroDPs = valueToRound * multiplicationFactor;
+        return std::round(interestedInZeroDPs) / multiplicationFactor;
     }
 
     void printC(std::ostream &ss) {
-        ss << "\tConfusion value\n\t\tc = " << round(static_cast<float>(_c), 2) << endl;
+        ss << "\tConfusion value\n\t\tc = " << round(_c, 2) << endl;
     }
 
     void printCM(std::ostream &ss) {
@@ -264,7 +264,7 @@ public:
         for (unsigned int row = 0; row < _classes; row++) {
             ss << "\t\t";
             for (unsigned int col = 0; col < 4; col++) {
-                ss << round(static_cast<float>(_per[row][col]), 2) << " ";
+                ss << round(_per[row][col], 2) << " ";
             }
         }
     }

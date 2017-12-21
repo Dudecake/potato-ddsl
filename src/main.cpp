@@ -8,6 +8,7 @@
 #endif //USE_LOG4CXX
 #include <boost/filesystem.hpp>
 #include <caffe/common.hpp>
+#include <thread>
 #include <sched.h>
 
 #include "potatoutils.h"

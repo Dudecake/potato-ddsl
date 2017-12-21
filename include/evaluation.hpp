@@ -134,12 +134,12 @@ public:
     void print(ostream &ss){
         ss<<"\tAverage System Accuracy(%): "<< _avgAccuray*100<<endl;
         ss<<"\tSystem Error(%)           : "<< _errRate*100<<endl;
-        ss<<"\tPrecision (Micro)(%)      : "<< _precisionMicro*100<<endl;
-        ss<<"\tRecall (Micro)(%)         : "<< _recallMicro*100<<endl;
-        ss<<"\tFscore (Micro)(%)         : "<< _fscoreMicro*100<<endl;
         ss<<"\tPrecision (Macro)(%)      : "<< _precisionMacro*100<<endl;
         ss<<"\tRecall (Macro)(%)         : "<< _recallMacro*100<<endl;
-        ss<<"\tFscore (Macro)(%)         : "<< _fscoreMacro*100;
+        ss<<"\tFscore (Macro)(%)         : "<< _fscoreMacro*100<<endl;
+        ss<<"\tPrecision (Micro)(%)      : "<< _precisionMicro*100<<endl;
+        ss<<"\tRecall (Micro)(%)         : "<< _recallMicro*100<<endl;
+        ss<<"\tFscore (Micro)(%)         : "<< _fscoreMicro*100;
     }
 };
 #endif //ACCURACY_EVALUATION_CPP_EVALUATION_HPP
