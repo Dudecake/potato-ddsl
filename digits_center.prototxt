@@ -1,0 +1,143 @@
+name: "CrappyNet"
+layer {
+  name: "ddslMemoryDataInput"
+  type: "MemoryData"
+  top: "ddslInput.Feature.ImagePNGFloat"
+  top: "ddslInput.Target.Float"
+  memory_data_param {
+    batch_size: 65
+    channels: 3
+    height: 14
+    width: 14
+  }
+}
+layer {
+  name: "scale"
+  type: "Power"
+  bottom: "ddslInput.Feature.ImagePNGFloat"
+  top: "scaled"
+  power_param {
+    scale: 0.00392156862745
+  }
+}
+layer {
+  name: "conv1"
+  type: "Convolution"
+  bottom: "scaled"
+  top: "conv1"
+  param {
+    lr_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+  }
+  convolution_param {
+    num_output: 2
+    pad: 1
+    kernel_size: 3
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layer {
+  name: "conv2"
+  type: "Convolution"
+  bottom: "conv1"
+  top: "conv2"
+  param {
+    lr_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+  }
+  convolution_param {
+    num_output: 2
+    kernel_size: 3
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layer {
+  name: "pool2"
+  type: "Pooling"
+  bottom: "conv2"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "ip1"
+  type: "InnerProduct"
+  bottom: "pool2"
+  top: "ip1"
+  param {
+    lr_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+  }
+  inner_product_param {
+    num_output: 2
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layer {
+  name: "relu1"
+  type: "ReLU"
+  bottom: "ip1"
+  top: "ip1"
+}
+layer {
+  name: "ip2"
+  type: "InnerProduct"
+  bottom: "ip1"
+  top: "ddslOutput.Result.Float.Confidence.Float.1.1.1"
+  param {
+    lr_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+  }
+  inner_product_param {
+    num_output: 2
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layer {
+  name: "result"
+  type: "SoftmaxWithLoss"
+  bottom: "ddslOutput.Result.Float.Confidence.Float.1.1.1"
+  bottom: "ddslInput.Target.Float"
+  top: "loss"  
+  include {phase: TRAIN}
+}
+layer {
+  name: "result"
+  type: "Softmax"
+  bottom: "ddslOutput.Result.Float.Confidence.Float.1.1.1"
+  top: "softmax"
+  include {phase: TEST}
+}

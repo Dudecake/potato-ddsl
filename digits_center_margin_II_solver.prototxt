@@ -1,0 +1,11 @@
+base_lr: 0.01
+max_iter: 3000
+lr_policy: "exp"
+gamma: 0.998291684356
+momentum: 0.975
+weight_decay: 0.0001
+solver_type: SGD
+solver_mode: GPU
+snapshot_after_train: 0
+net: "digits_center_margin_II.prototxt"
+
